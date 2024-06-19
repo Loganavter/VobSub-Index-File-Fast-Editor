@@ -317,22 +317,32 @@ class SubtitleEditor(TkinterDnD.Tk):  # TkinterDnD.Tk is a special type of windo
         for i, line in enumerate(lines):  # Iterate through each line of the output
             if 'Subtitle' in line:  # Check if the line contains subtitle information
                 try:
-                    parts = line.split('Subtitle:')  # Split the line to extract subtitle parts
-                    track_info = parts[0].strip()  # Get the track information
-                    track_id = track_info.split('#0:')[1].split('(')[0].strip()  # Extract the track ID
+                    print(f"Processing line: {line}")  # Debugging: Print the line being processed
+                    parts = line.split('): Subtitle:')  # Split the line to extract subtitle parts
+                    print(f"Parts: {parts}")  # Debugging: Print the parts after splitting
+                    track_info = parts[0].split('Stream #0:')[1].strip()  # Extract the track information
+                    print(f"Track info: {track_info}")  # Debugging: Print the track information
+                    track_id = track_info.split('(')[0].strip()  # Extract the track ID
+                    print(f"Track ID: {track_id}")  # Debugging: Print the track ID
                     language = track_info.split('(')[1].split(')')[0].strip()  # Extract the language
-                    resolution = line.split('dvd_subtitle, ')[1].split(' (default)')[0]  # Extract the resolution
-                    duration = None  # Initialize duration to None
-                    for l in lines[i:]:  # Iterate through lines from the current line to the end
-                        if 'DURATION' in l:  # Check if line contains duration information
-                            duration = l.split('DURATION')[1].strip().split(': ')[1].strip()  # Extract the duration
-                            duration = duration.rstrip('0').rstrip('.')  # Remove trailing zeros and dots from the duration
-                            break  # Exit the loop once duration is found
+                    print(f"Language: {language}")  # Debugging: Print the language
+                    resolution = parts[1].split(' (default)')[0]  # Extract the resolution
+                    print(f"Resolution: {resolution}")  # Debugging: Print the resolution
+                    duration = None
+                    for j in range(i+1, min(i+5, len(lines))):  # Search within the next 5 lines
+                        print(f"Checking line {j}: {lines[j]}")  # Debugging: Print the line being checked for duration
+                        if lines[j].strip().startswith('      DURATION'):
+                            duration = lines[j].split(': ')[1].strip()  # Extract the duration
+                            duration = duration.rstrip('0').rstrip('.')
+                            break
+                    print(f"Duration: {duration}")  # Debugging: Print the duration
                     subtitles_info[track_id] = {'resolution': resolution, 'duration': duration, 'language': language}  # Store subtitles information in the dictionary
                 except (IndexError, ValueError) as e:  # Catch any parsing errors
                     print(f"Error parsing line: {line}")  # Print an error message indicating the line that caused the error
                     print(f"Error details: {e}")  # Print details of the error
         return subtitles_info  # Return the subtitles information dictionary
+
+
 
     # Function for displaying subtitle information
     def show_subtitles_info(self, subtitles_info, mkv_file, subtitle_dir):
